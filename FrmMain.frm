@@ -12,7 +12,7 @@ Begin VB.Form FrmMain
    ScaleWidth      =   4680
    StartUpPosition =   3  '´°¿ÚÈ±Ê¡
    Begin VB.Timer Timer2 
-      Interval        =   50
+      Interval        =   100
       Left            =   480
       Top             =   2760
    End
@@ -23,15 +23,17 @@ Begin VB.Form FrmMain
       Top             =   2760
    End
    Begin VB.CommandButton CmdStartStop 
-      Caption         =   "start/stop"
+      Caption         =   "Start"
       Height          =   495
-      Left            =   1680
+      Left            =   1800
       TabIndex        =   0
+      ToolTipText     =   "Ctrl + Shift + F12"
       Top             =   2040
-      Width           =   1215
+      Width           =   1095
    End
    Begin VB.Label LblDisplay 
       Alignment       =   2  'Center
+      BackStyle       =   0  'Transparent
       Caption         =   "00:00.000"
       BeginProperty Font 
          Name            =   "Consolas"
@@ -46,7 +48,7 @@ Begin VB.Form FrmMain
       Left            =   480
       TabIndex        =   1
       Top             =   600
-      Width           =   3615
+      Width           =   3735
    End
 End
 Attribute VB_Name = "FrmMain"
@@ -97,9 +99,11 @@ Private Sub StartStop()
     If IsRunning Then
         GetSystemTime StartTime
         Timer1.Enabled = True
+        CmdStartStop.Caption = "Stop"
     Else
         Update
         Timer1.Enabled = False
+        CmdStartStop.Caption = "Restart"
     End If
 End Sub
 
