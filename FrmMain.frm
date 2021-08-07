@@ -12,7 +12,7 @@ Begin VB.Form FrmMain
    ScaleWidth      =   4680
    StartUpPosition =   3  '´°¿ÚÈ±Ê¡
    Begin VB.Timer Timer2 
-      Interval        =   100
+      Interval        =   10
       Left            =   480
       Top             =   2760
    End
