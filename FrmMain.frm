@@ -8,15 +8,36 @@ Begin VB.Form FrmMain
    ClientWidth     =   4680
    LinkTopic       =   "Form1"
    MaxButton       =   0   'False
-   ScaleHeight     =   3195
-   ScaleWidth      =   4680
+   ScaleHeight     =   213
+   ScaleMode       =   3  'Pixel
+   ScaleWidth      =   312
    StartUpPosition =   3  '´°¿ÚÈ±Ê¡
-   Begin VB.Timer Timer2 
+   Begin VB.ComboBox CmbHotKey 
+      Height          =   300
+      ItemData        =   "FrmMain.frx":0000
+      Left            =   2520
+      List            =   "FrmMain.frx":015A
+      Style           =   2  'Dropdown List
+      TabIndex        =   3
+      Top             =   2400
+      Width           =   1935
+   End
+   Begin VB.ComboBox CmbHotKeyModifiers 
+      Height          =   300
+      ItemData        =   "FrmMain.frx":02EC
+      Left            =   360
+      List            =   "FrmMain.frx":030E
+      Style           =   2  'Dropdown List
+      TabIndex        =   2
+      Top             =   2400
+      Width           =   1905
+   End
+   Begin VB.Timer TmrHotKey 
       Interval        =   10
       Left            =   480
       Top             =   2760
    End
-   Begin VB.Timer Timer1 
+   Begin VB.Timer TmrUpdate 
       Enabled         =   0   'False
       Interval        =   10
       Left            =   0
@@ -26,9 +47,8 @@ Begin VB.Form FrmMain
       Caption         =   "Start"
       Height          =   495
       Left            =   1800
-      TabIndex        =   0
-      ToolTipText     =   "Ctrl + Shift + F12"
-      Top             =   2040
+      TabIndex        =   1
+      Top             =   1560
       Width           =   1095
    End
    Begin VB.Label LblDisplay 
@@ -46,8 +66,8 @@ Begin VB.Form FrmMain
       EndProperty
       Height          =   855
       Left            =   480
-      TabIndex        =   1
-      Top             =   600
+      TabIndex        =   0
+      Top             =   480
       Width           =   3735
    End
 End
@@ -74,22 +94,68 @@ End Type
 
 Private StartTime As SYSTEMTIME
 Private IsRunning As Boolean
+
+Private HotKey As Integer
+Private HotKeyModifiers As New Collection
 Private HotKeyPressed As Boolean
+
+Private Sub CmbHotKey_Click()
+    HotKey = CmbHotKey.ItemData(CmbHotKey.ListIndex)
+End Sub
+
+Private Sub CmbHotKeyModifiers_Click()
+    While HotKeyModifiers.Count > 0
+        HotKeyModifiers.Remove 1
+    Wend
+
+    Dim Chosen As Integer
+    Chosen = CmbHotKeyModifiers.ItemData(CmbHotKeyModifiers.ListIndex)
+
+    If Chosen And 1 Then HotKeyModifiers.Add vbKeyShift
+    If Chosen And 2 Then HotKeyModifiers.Add vbKeyControl
+    If Chosen And 4 Then HotKeyModifiers.Add vbKeyMenu
+    If Chosen And 8 Then HotKeyModifiers.Add vbKeyCapital
+End Sub
 
 Private Sub CmdStartStop_Click()
     StartStop
 End Sub
 
-Private Sub Timer1_Timer()
+Private Sub Form_Click()
+    CmdStartStop.SetFocus
+End Sub
+
+Private Sub Form_Load()
+    CmbHotKeyModifiers.ListIndex = 3
+    CmbHotKeyModifiers_Click
+    CmbHotKey.ListIndex = 12
+    CmbHotKey_Click
+End Sub
+
+Private Sub TmrUpdate_Timer()
     Update
 End Sub
 
-Private Sub Timer2_Timer()
-    Dim HotKeyPressedNew
-    HotKeyPressedNew = GetAsyncKeyState(vbKeyControl) And GetAsyncKeyState(vbKeyShift) And GetAsyncKeyState(vbKeyF12)
+Private Sub TmrHotKey_Timer()
+    If HotKey = 0 And HotKeyModifiers.Count = 0 Then Exit Sub
+
+    Dim HotKeyPressedNew As Boolean
+    HotKeyPressedNew = True
+    If HotKey <> 0 And GetAsyncKeyState(HotKey) = 0 Then
+        HotKeyPressedNew = False
+    Else
+        Dim I As Integer, Key As Integer
+        For I = 1 To HotKeyModifiers.Count
+            Key = HotKeyModifiers.Item(I)
+            If GetAsyncKeyState(Key) = 0 Then
+                HotKeyPressedNew = False
+                Exit For
+            End If
+        Next
+    End If
+    
     If HotKeyPressedNew And Not HotKeyPressed Then
         StartStop
-        Me.Show
     End If
     HotKeyPressed = HotKeyPressedNew
 End Sub
@@ -98,11 +164,11 @@ Private Sub StartStop()
     IsRunning = Not IsRunning
     If IsRunning Then
         GetSystemTime StartTime
-        Timer1.Enabled = True
+        TmrUpdate.Enabled = True
         CmdStartStop.Caption = "Stop"
     Else
         Update
-        Timer1.Enabled = False
+        TmrUpdate.Enabled = False
         CmdStartStop.Caption = "Restart"
     End If
 End Sub
@@ -128,3 +194,4 @@ Private Sub Update()
     End If
     LblDisplay.Caption = Format(Minutes, String(2, "0")) & ":" & Format(Seconds, String(2, "0")) & "." & Format(Milliseconds, String(3, "0"))
 End Sub
+
